@@ -1,88 +1,43 @@
-const data = require('./lib/data.js');
-const initialDataPetras = { name: 'Petras', age: 99 };
+const _data = require('./lib/data-async.js');
+const utils = require('./lib/utils.js');
+const Figura = require('./js/Figura.js');
 
-// // console.log(data);
-data.create('users', 'petras', initialDataPetras, (state, msg) => {
-    
-    data.read('users', 'petras', (err, content) => {
-        const fileData = JSON.parse(content);
-        console.log('READ', fileData);
+(async () => {
 
-        data.update('users', 'petras', { ...initialDataPetras, favoriteColor: 'blue' }, (err, msg) => {
-            console.log('UPATE', err, msg);
+    const amount = 5;
+    const figuruDydziai = Figura.randomFiguros(amount);
+    console.log(figuruDydziai);
+   
+//    const figuros =   [
+//         {width: 5, height: 4},
+//         {width: 2, height: 3},
+//         {width: 2, height: 7},
+//         {width: 1, height: 1},
+//         {width: 8, height: 6},
+//     ]
+     
 
+    // sukuriam failus
+    for (let i = 0; i < amount; i++) {
+        await _data.create('figuros', 'figura-' + i, figuruDydziai[i]);
+    }
 
-            data.read('users', 'petras', (err, content) => {
-                const fileData = JSON.parse(content);
-                console.log('READ1', fileData);
+    // perskaitom failus ir atnaujiname
+    for (let i = 0; i < amount; i++) {
+        const textContent = await _data.read('figuros', 'figura-' + i);
+        const { width, height } = utils.parseJSONtoObject(textContent);
+        const plotas = Figura.size(width, height);
+        const hash = utils.hash(`figura-${width}-${height}-${plotas}`);
+        const updatedObj = {
+            width,
+            height,
+            plotas,
+            hash
+        }
+        await _data.update('figuros', 'figura-' + i, updatedObj);
+    }
 
-                data.delete('users', 'petras', (err, msg) => {
-                    console.log('DELETE1', err, msg);
-                })
-            });
-        });
-    });
-
-});
-
-// data.create('users', 'jonas', { name: 'Jonas', age: 69 }, (state, msg) => {
-
-//     if (state) {
-//         console.log(msg);
-//     } else {
-//         console.error(msg);
-//     }
-//     console.log('Sekantys zingzniai po bandymo sukurti faila')
-// });
-
-
-// data.create('books', 'pasaka', { name: 'Pasakos', puslapiai: 69 }, (state, msg) => {
-
-//     if (state) {
-//         console.log(msg);
-//     } else {
-//         console.error(msg);
-//     }
-//     console.log('Sekantys zingzniai po bandymo sukurti faila')
-// });
-
-
-
-
-// data.read('users', 'petras', (err, content) => {
-//     const fileData = JSON.parse(content);
-//     console.log('READ', fileData);
-
-//     data.update('users', 'petras', { ...initialDataPetras, favoriteColor: 'blue' }, (err, msg) => {
-//         console.log('UPATE', err, msg);
-
-
-//         data.read('users', 'petras', (err, content) => {
-//             const fileData = JSON.parse(content);
-//             console.log('READ', fileData);
-
-//             data.delete('users', 'petras', (err,msg) =>{
-//                 console.log('DELETE1',err,msg);
-//             })
-//         });
-//     });
-// });
-
-// data.read('books', 'pasaka',(err,content)=>{
-// //    console.log(content);
-//     const fileData  =JSON.parse(content);
-// console.log('Knygos pavadinimas:',fileData.name);
-// console.log('Puslapiai:',fileData.puslapiai);
-// });
-
-
-
-
-
-
-
-
-// data.delete();
-
-// data.create('users', 'labas', {name: "Marsietis"})
-
+    // spausdiname visus failu pavadinimus
+    const files = await _data.folderContent('figuros');
+    console.log(files);
+})();
